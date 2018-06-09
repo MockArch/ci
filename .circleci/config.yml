@@ -4,14 +4,33 @@ jobs:
   build:
     working_directory: ~/ci
     docker:
-      - image: mockarch/python3:v1
+      - image: mockarch/python3
     steps:
       - checkout
+
+      - save_cache:
+          paths:
+            - ./venv
+          key: v1-dependencies-{{ checksum "requirements.txt" }}
+
       - run:
-          command: sudo pip install -r requirements.txt    
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -r requirements.txt    
     
+      
       - run:
-          command: python app.py
+          command: |
+            . venv/bin/activate
+            python app.py
+          background: true
+
+      - run:
+          name: run tests
+          command: |
+            . venv/bin/activate
+             nosetests test_flask.py    
 
       - store_test_results:
           path: test-results
